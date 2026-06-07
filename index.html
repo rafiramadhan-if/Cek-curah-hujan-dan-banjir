@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIAGA — Sistem Peringatan Dini Purwokerto</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+</head>
+<body>
+
+  <!-- Animated background -->
+  <div class="bg-layer">
+    <div class="rain-container" id="rainContainer"></div>
+    <div class="grid-overlay"></div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <span class="brand-icon">⚠</span>
+      <span class="brand-text">SIAGA<span class="brand-sub">PWT</span></span>
+    </div>
+    <div class="nav-status">
+      <span class="live-dot"></span>
+      <span class="live-text">LIVE MONITORING</span>
+    </div>
+    <div class="nav-right"><div class="loading-badge" id="loadingBadge" style="display:none;"><span class="loading-spin"></span><span>Memuat...</span></div><div class="data-source" id="dataSource">Menghubungkan...</div><div class="nav-time" id="navTime">--:--:--</div></div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-label">SISTEM PERINGATAN DINI</div>
+    <h1 class="hero-title">PURWOKERTO<br><span class="hero-accent">ALERT</span></h1>
+    <p class="hero-sub">Kabupaten Banyumas, Jawa Tengah · Real-time cuaca & banjir</p>
+
+    <!-- STATUS CARD UTAMA -->
+    <div class="status-main" id="statusMain">
+      <div class="status-level" id="statusLevel">SIAGA 2</div>
+      <div class="status-desc" id="statusDesc">Potensi banjir di wilayah dataran rendah</div>
+      <div class="status-updated">Diperbarui: <span id="lastUpdate">--</span></div>
+    </div>
+  </section>
+
+  <!-- ALERT TICKER -->
+  <div class="ticker-wrap">
+    <div class="ticker-label">⚡ PERINGATAN</div>
+    <div class="ticker-track">
+      <div class="ticker-content" id="tickerContent">
+        Waspada banjir Sungai Serayu · Hujan lebat diperkirakan hingga 22.00 WIB · Angin kencang 45 km/jam di wilayah Sokaraja · Jalan Gerilya tergenang 20cm · Tetap pantau informasi resmi BPBD Banyumas ·
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD GRID -->
+  <section class="dashboard">
+
+    <!-- Cuaca sekarang -->
+    <div class="card card-weather">
+      <div class="card-header">
+        <span class="card-label">CUACA SAAT INI</span>
+        <span class="card-icon">🌧</span>
+      </div>
+      <div class="weather-main">
+        <div class="temp-display" id="tempDisplay">24°</div>
+        <div class="weather-desc" id="weatherDesc">Hujan Lebat</div>
+      </div>
+      <div class="weather-stats">
+        <div class="stat"><div class="stat-val" id="humidity">87%</div><div class="stat-lbl">Kelembaban</div></div>
+        <div class="stat"><div class="stat-val" id="wind">45</div><div class="stat-lbl">Angin km/h</div></div>
+        <div class="stat"><div class="stat-val" id="rain">28</div><div class="stat-lbl">Hujan mm</div></div>
+        <div class="stat"><div class="stat-val" id="visibility">2</div><div class="stat-lbl">Jarak km</div></div>
+      </div>
+    </div>
+
+    <!-- Peringatan aktif -->
+    <div class="card card-alerts">
+      <div class="card-header">
+        <span class="card-label">PERINGATAN AKTIF</span>
+        <span class="alert-count" id="alertCount">3</span>
+      </div>
+      <div class="alert-list" id="alertList">
+        <div class="alert-item alert-red">
+          <div class="alert-icon">🌊</div>
+          <div class="alert-info">
+            <div class="alert-title">BANJIR — Sungai Serayu</div>
+            <div class="alert-time">Sejak 14:30 WIB</div>
+          </div>
+          <div class="alert-badge red">BAHAYA</div>
+        </div>
+        <div class="alert-item alert-orange">
+          <div class="alert-icon">⛈</div>
+          <div class="alert-info">
+            <div class="alert-title">BADAI PETIR — Wilayah Selatan</div>
+            <div class="alert-time">Sejak 15:45 WIB</div>
+          </div>
+          <div class="alert-badge orange">WASPADA</div>
+        </div>
+        <div class="alert-item alert-yellow">
+          <div class="alert-icon">💨</div>
+          <div class="alert-info">
+            <div class="alert-title">ANGIN KENCANG — Sokaraja</div>
+            <div class="alert-time">Sejak 16:10 WIB</div>
+          </div>
+          <div class="alert-badge yellow">SIAGA</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Level sungai -->
+    <div class="card card-river">
+      <div class="card-header">
+        <span class="card-label">TINGGI MUKA AIR</span>
+      </div>
+      <div class="river-list">
+        <div class="river-item">
+          <div class="river-name">Sungai Serayu</div>
+          <div class="river-bar-wrap">
+            <div class="river-bar" style="--pct:85%; --clr:#ef4444;"></div>
+          </div>
+          <div class="river-val red">8.5m <span class="river-status">BAHAYA</span></div>
+        </div>
+        <div class="river-item">
+          <div class="river-name">Sungai Logawa</div>
+          <div class="river-bar-wrap">
+            <div class="river-bar" style="--pct:62%; --clr:#f97316;"></div>
+          </div>
+          <div class="river-val orange">6.2m <span class="river-status">WASPADA</span></div>
+        </div>
+        <div class="river-item">
+          <div class="river-name">Sungai Klawing</div>
+          <div class="river-bar-wrap">
+            <div class="river-bar" style="--pct:40%; --clr:#eab308;"></div>
+          </div>
+          <div class="river-val yellow">4.0m <span class="river-status">SIAGA</span></div>
+        </div>
+        <div class="river-item">
+          <div class="river-name">Sungai Pelus</div>
+          <div class="river-bar-wrap">
+            <div class="river-bar" style="--pct:22%; --clr:#22c55e;"></div>
+          </div>
+          <div class="river-val green">2.2m <span class="river-status">NORMAL</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prakiraan 6 jam -->
+    <div class="card card-forecast">
+      <div class="card-header">
+        <span class="card-label">PRAKIRAAN 6 JAM</span>
+      </div>
+      <div class="forecast-row" id="forecastRow"></div>
+    </div>
+
+    <!-- Wilayah terdampak -->
+    <div class="card card-area">
+      <div class="card-header">
+        <span class="card-label">WILAYAH TERDAMPAK</span>
+      </div>
+      <div class="area-grid">
+        <div class="area-chip red">Sokaraja</div>
+        <div class="area-chip red">Rawalo</div>
+        <div class="area-chip orange">Purwokerto Selatan</div>
+        <div class="area-chip orange">Kalibagor</div>
+        <div class="area-chip orange">Banyumas Kota</div>
+        <div class="area-chip yellow">Purwokerto Timur</div>
+        <div class="area-chip yellow">Sumpiuh</div>
+        <div class="area-chip green">Purwokerto Utara</div>
+        <div class="area-chip green">Baturraden</div>
+      </div>
+    </div>
+
+    <!-- Kontak darurat -->
+    <div class="card card-emergency">
+      <div class="card-header">
+        <span class="card-label">KONTAK DARURAT</span>
+      </div>
+      <div class="emergency-list">
+        <a class="emergency-item" href="tel:112">
+          <span class="em-icon">🚨</span>
+          <div><div class="em-name">Nomor Darurat</div><div class="em-num">112</div></div>
+        </a>
+        <a class="emergency-item" href="tel:02817602020">
+          <span class="em-icon">🏛</span>
+          <div><div class="em-name">BPBD Banyumas</div><div class="em-num">0281-760 2020</div></div>
+        </a>
+        <a class="emergency-item" href="tel:02818900">
+          <span class="em-icon">🚑</span>
+          <div><div class="em-name">SAR Purwokerto</div><div class="em-num">0281-8900</div></div>
+        </a>
+        <a class="emergency-item" href="tel:113">
+          <span class="em-icon">🚒</span>
+          <div><div class="em-name">Pemadam Kebakaran</div><div class="em-num">113</div></div>
+        </a>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- PETA RADAR -->
+  <section class="map-section">
+    <div class="map-header">
+      <div>
+        <div class="map-label">RADAR CUACA & BANJIR</div>
+        <h2 class="map-title">PETA TERDAMPAK — PURWOKERTO</h2>
+      </div>
+      <div class="map-controls">
+        <button class="map-btn active" data-layer="rain" onclick="toggleLayer('rain', this)">🌧 Hujan</button>
+        <button class="map-btn" data-layer="flood" onclick="toggleLayer('flood', this)">🌊 Banjir</button>
+        <button class="map-btn" data-layer="wind" onclick="toggleLayer('wind', this)">💨 Angin</button>
+        <button class="map-btn" data-layer="thunder" onclick="toggleLayer('thunder', this)">⚡ Petir</button>
+      </div>
+    </div>
+
+    <div class="map-wrap">
+      <div id="map"></div>
+
+      <!-- Legend -->
+      <div class="map-legend">
+        <div class="legend-title">INTENSITAS</div><div id="radarTime" style="font-size:0.58rem;color:#3b82f6;margin-bottom:6px;font-family:monospace;letter-spacing:1px;"></div>
+        <div class="legend-item"><span class="legend-dot" style="background:#ef4444;box-shadow:0 0 8px #ef4444;"></span> Ekstrem</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#f97316;box-shadow:0 0 8px #f97316;"></span> Berat</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#eab308;box-shadow:0 0 8px #eab308;"></span> Sedang</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#22c55e;box-shadow:0 0 8px #22c55e;"></span> Ringan</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#3b82f6;box-shadow:0 0 8px #3b82f6;"></span> Titik Banjir</div>
+      </div>
+
+      <!-- Stats overlay -->
+      <div class="map-stats">
+        <div class="mstat"><div class="mstat-val" id="mstatArea">9</div><div class="mstat-lbl">Kecamatan</div></div>
+        <div class="mstat"><div class="mstat-val" id="mstatFlood">4</div><div class="mstat-lbl">Titik Banjir</div></div>
+        <div class="mstat"><div class="mstat-val" id="mstatRain">28mm</div><div class="mstat-lbl">Curah Hujan</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TIPS KESELAMATAN -->
+  <section class="tips-section">
+    <div class="tips-header">
+      <h2 class="tips-title">PANDUAN KESELAMATAN</h2>
+      <p class="tips-sub">Langkah-langkah yang harus dilakukan saat bencana</p>
+    </div>
+    <div class="tips-grid">
+      <div class="tip-card">
+        <div class="tip-num">01</div>
+        <div class="tip-icon">📦</div>
+        <div class="tip-title">Siapkan Tas Darurat</div>
+        <div class="tip-desc">Dokumen penting, obat-obatan, air minum, makanan kering, dan pakaian untuk 3 hari.</div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-num">02</div>
+        <div class="tip-icon">🏔</div>
+        <div class="tip-title">Evakuasi ke Tempat Tinggi</div>
+        <div class="tip-desc">Jika air mulai naik, segera pindah ke lantai atas atau tempat evakuasi terdekat.</div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-num">03</div>
+        <div class="tip-icon">⚡</div>
+        <div class="tip-title">Matikan Listrik</div>
+        <div class="tip-desc">Matikan aliran listrik utama sebelum banjir masuk untuk mencegah korsleting.</div>
+      </div>
+      <div class="tip-card">
+        <div class="tip-num">04</div>
+        <div class="tip-icon">📡</div>
+        <div class="tip-title">Pantau Informasi Resmi</div>
+        <div class="tip-desc">Ikuti update dari BPBD Banyumas dan hindari menyebarkan informasi yang belum terverifikasi.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-brand">SIAGA PWT</div>
+    <div class="footer-text">Sistem Peringatan Dini Bencana · Kabupaten Banyumas, Jawa Tengah</div>
+    <div class="footer-credits">Data: BPBD Banyumas · BMKG Jawa Tengah · BBWS Serayu Opak</div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
